@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Products | SmartRetailAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/products.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/ecommerce.css') }}" />
+</head>
+<body class="landing-page retail-shell">
+  <nav class="retail-topbar">
+    <a href="{{ url_for('public_landing') }}" class="retail-brand">
+      <span class="retail-brand-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 7V6a4 4 0 1 1 8 0v1h2.4a1 1 0 0 1 1 .8l1.4 8a1 1 0 0 1-1 1.2H4.2a1 1 0 0 1-1-1.2l1.4-8a1 1 0 0 1 1-.8H8Zm2 0h4V6a2 2 0 1 0-4 0v1Z"/>
+        </svg>
+      </span>
+      <span>Smart <strong>Retail</strong></span>
+    </a>
+    <div class="retail-nav-links">
+      <a href="{{ url_for('public_landing') }}">Home</a>
+      <a href="{{ url_for('products') }}" class="active">Products</a>
+      <a href="{{ url_for('dashboard') }}">Categories</a>
+      <a href="{{ url_for('dashboard') }}">Deals</a>
+      <a href="{{ url_for('orders') }}">Orders</a>
+    </div>
+    <div class="retail-nav-actions">
+      <a href="{{ url_for('products') }}" class="retail-icon-link" aria-label="Search">
+        <svg viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m1.85-5.15a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>
+      </a>
+      <button type="button" id="cartIcon" class="retail-icon-link retail-cart-link" aria-label="Open cart">
+        <svg viewBox="0 0 24 24"><path d="M2 3h2l2.2 10.2a1 1 0 0 0 1 .8h9.9a1 1 0 0 0 1-.7L21 6H6"/><circle cx="9" cy="19" r="1.6"/><circle cx="18" cy="19" r="1.6"/></svg>
+        <span id="navCartCount" class="retail-badge">0</span>
+      </button>
+      <a href="{{ url_for('dashboard') }}" class="retail-profile-link">
+        <span class="retail-profile-avatar">
+          <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0"/></svg>
+        </span>
+        <span>Account</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="products-container">
+    <aside class="filters-sidebar card">
+      <div class="filter-header"><h3>Filters</h3><button class="filter-reset" type="button">Reset</button></div>
+      <div class="filter-section">
+        <label class="filter-label">Search</label>
+        <div class="search-box"><span class="search-icon">+</span><input class="search-input" id="searchInput" placeholder="Search products"></div>
+      </div>
+      <div class="filter-section">
+        <label class="filter-label">Category</label>
+        <div class="checkbox-filter" id="categoryFilters"></div>
+      </div>
+      <div class="filter-section">
+        <label class="filter-label">Price Range</label>
+        <div class="price-filter"><input class="price-input" id="minPrice" value="0"><span>-</span><input class="price-input" id="maxPrice" value="999"></div>
+      </div>
+      <div class="filter-section">
+        <label class="checkbox-item"><input type="checkbox" id="inStockOnly"> In stock only</label>
+      </div>
+      <button class="btn btn-primary" style="width:100%" type="button">Apply Filters</button>
+    </aside>
+
+    <main class="products-main">
+      <div class="products-header">
+        <div>
+          <h2>Product Catalog</h2>
+          <p class="text-muted">Browse products and add them instantly to your live cart without leaving the page.</p>
+        </div>
+      </div>
+
+      <div class="products-grid">
+        {% if products %}
+          {% for p in products %}
+            <article class="product-card card"
+              data-slug="{{ p.slug }}"
+              data-name="{{ p.name }}"
+              data-category="{{ p.category }}"
+              data-price="{{ '%.2f'|format(p.price) }}"
+              data-stock="{{ p.stock }}"
+              data-image="{{ p.image }}"
+              data-desc="{{ p.desc }}">
+              <div class="product-image"><img src="{{ p.image }}" alt="{{ p.name }}"><div class="product-badge">{{ p.badge or '' }}</div></div>
+              <div class="product-info"><div class="product-category">{{ p.category }}</div><h3 class="product-name">{{ p.name }}</h3><p class="product-desc">{{ p.desc }}</p><div class="product-footer"><div class="product-price"><span class="current-price">${{ '%.2f'|format(p.price) }}</span></div></div>
+              <div class="product-actions">
+                <a href="{{ url_for('product_detail', product_id=p.slug) }}" class="btn btn-secondary btn-sm">View</a>
+                <button type="button" class="btn btn-primary btn-sm add-to-cart-btn">Add to Cart</button>
+              </div></div>
+              <div class="product-stock"><span class="badge {{ 'badge-success' if p.stock>10 else 'badge-warning' }}">{{ 'In Stock' if p.stock>0 else 'Out' }}</span></div>
+            </article>
+          {% endfor %}
+        {% else %}
+          <article class="product-card card">...</article>
+        {% endif %}
+      </div>
+
+      <div class="empty-state card" id="noResultsState" hidden>
+        <h3>No products match your filters.</h3>
+        <p class="text-muted">Try changing the category, price range, or search term.</p>
+      </div>
+    </main>
+  </div>
+
+  <section id="cartModal" class="cart-drawer" hidden>
+    <div class="cart-drawer-backdrop" id="closeCartModal"></div>
+    <div class="cart-drawer-panel">
+      <header class="cart-drawer-header">
+        <div>
+          <p class="cart-drawer-label">Live Cart</p>
+          <h3>Your Cart</h3>
+        </div>
+        <button type="button" class="retail-outline-btn compact" id="cartViewOrdersBtn">View Orders</button>
+      </header>
+      <div id="cartItemsList" class="cart-drawer-items"></div>
+      <footer class="cart-drawer-footer">
+        <div class="cart-drawer-total-row">
+          <span>Total</span>
+          <strong id="cartModalTotal">$0.00</strong>
+        </div>
+        <button id="cartPlaceOrderBtn" class="retail-primary-btn" type="button">Place Order</button>
+      </footer>
+    </div>
+  </section>
+
+  <script>window.__USER_ID__ = "{{ session.get('user_id') or '' }}";</script>
+  <script src="{{ url_for('static', filename='js/products.js') }}"></script>
+</body>
+</html>

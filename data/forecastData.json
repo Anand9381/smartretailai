@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Wireless Headphones Pro",
+    "monthlySales": 125,
+    "predictedFutureSales": 132
+  },
+  {
+    "name": "Smart Watch Ultra",
+    "monthlySales": 230,
+    "predictedFutureSales": 199
+  },
+  {
+    "name": "Designer Sunglasses",
+    "monthlySales": 95,
+    "predictedFutureSales": 103
+  },
+  {
+    "name": "Premium Coffee Maker",
+    "monthlySales": 70,
+    "predictedFutureSales": 83
+  }
+]

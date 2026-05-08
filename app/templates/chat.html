@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer AI Chat | SmartRetailAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #0a0a0f;
+      color: #f0f0f5;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(255, 120, 40, 0.12) 0%, transparent 70%),
+        radial-gradient(circle at 20% 80%, rgba(255, 80, 40, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 160, 60, 0.05) 0%, transparent 40%);
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.9rem 1.8rem;
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .topbar-brand .brand-icon {
+      font-size: 1.5rem;
+    }
+
+    .topbar-brand .brand-ai {
+      color: #ff7b2f;
+    }
+
+    .topbar-nav {
+      display: flex;
+      align-items: center;
+      gap: 1.6rem;
+    }
+
+    .topbar-nav a {
+      text-decoration: none;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 500;
+      font-size: 0.92rem;
+      transition: color 0.2s;
+    }
+
+    .topbar-nav a:hover {
+      color: #fff;
+    }
+
+    .topbar-nav .nav-active {
+      color: #ff7b2f;
+    }
+
+    .topbar-logout {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.6rem 1.2rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #ff593e 0%, #ff8b1f 100%);
+      color: #fff !important;
+      font-weight: 600;
+      font-size: 0.88rem;
+      box-shadow: 0 4px 18px rgba(255, 100, 40, 0.25);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .topbar-logout:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(255, 100, 40, 0.35);
+    }
+
+    /* ── Main Layout ── */
+    .chat-page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: calc(100vh - 60px);
+      padding: 1.5rem 1.5rem 0;
+      overflow: hidden;
+    }
+
+    /* ── Hero Section ── */
+    .hero-section {
+      text-align: center;
+      flex-shrink: 0;
+      padding-bottom: 1rem;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 0.4rem 1.1rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 0.8rem;
+    }
+
+    .hero-title {
+      font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      background: linear-gradient(135deg, #ff7b2f 0%, #ff4a1f 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.55);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ── Chat Container ── */
+    .chat-container {
+      width: min(920px, 100%);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: rgba(16, 18, 30, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 20px 20px 0 0;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ── Date Divider ── */
+    .date-divider {
+      text-align: center;
+      padding: 0.8rem 0 0.4rem;
+      flex-shrink: 0;
+    }
+
+    .date-divider span {
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+    }
+
+    /* ── Chat History ── */
+    .chat-history {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      min-height: 0;
+    }
+
+    .chat-history::-webkit-scrollbar { width: 5px; }
+    .chat-history::-webkit-scrollbar-track { background: transparent; }
+    .chat-history::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+    /* ── Messages ── */
+    .chat-history .message {
+      display: flex;
+      gap: 0.75rem;
+      max-width: 75%;
+      animation: msgFadeIn 0.3s ease-out;
+    }
+
+    @keyframes msgFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-history .user-message {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .chat-history .assistant-message {
+      align-self: flex-start;
+    }
+
+    .chat-history .message-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #ff6b35 0%, #ff4500 100%);
+      box-shadow: 0 4px 14px rgba(255, 107, 53, 0.3);
+    }
+
+    .chat-history .message-wrapper {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-history .user-message .message-wrapper {
+      align-items: flex-end;
+    }
+
+    .chat-history .message-content {
+      padding: 0.8rem 1.1rem;
+      line-height: 1.55;
+      font-size: 0.92rem;
+      word-break: break-word;
+    }
+
+    .chat-history .user-message .message-content {
+      background: linear-gradient(135deg, #ff6b35 0%, #ff3d1f 100%);
+      color: #fff;
+      border-radius: 18px 18px 4px 18px;
+      box-shadow: 0 4px 20px rgba(255, 107, 53, 0.2);
+    }
+
+    .chat-history .assistant-message .message-content {
+      background: rgba(35, 38, 55, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      color: #e8e8f0;
+      border-radius: 18px 18px 18px 4px;
+    }
+
+    .chat-history .message-content p {
+      margin: 0 0 0.4rem;
+    }
+
+    .chat-history .message-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    .chat-history .message-content ul {
+      margin: 0.3rem 0 0;
+      padding-left: 1.3rem;
+    }
+
+    .chat-history .message-content li {
+      margin: 0.2rem 0;
+    }
+
+    .message-time {
+      font-size: 0.72rem;
+      color: rgba(255, 255, 255, 0.35);
+      margin-top: 0.3rem;
+      padding: 0 0.2rem;
+    }
+
+    /* ── Quick Actions ── */
+    .quick-actions {
+      flex-shrink: 0;
+      padding: 0.8rem 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .quick-actions-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 0.6rem;
+    }
+
+    .quick-actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .qa-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.55rem 1rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 0.84rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .qa-chip:hover {
+      background: rgba(255, 107, 53, 0.1);
+      border-color: rgba(255, 107, 53, 0.3);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .qa-chip .qa-icon {
+      font-size: 1rem;
+    }
+
+    /* ── Compose Bar ── */
+    .compose-bar {
+      flex-shrink: 0;
+      padding: 0.8rem 1.5rem 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .compose-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      background: rgba(20, 22, 38, 0.8);
+      border: 1.5px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 0.6rem 0.7rem 0.6rem 1.1rem;
+      transition: border-color 0.2s;
+    }
+
+    .compose-wrapper:focus-within {
+      border-color: rgba(255, 107, 53, 0.35);
+    }
+
+    .compose-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: #fff;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .compose-input::placeholder {
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    .compose-attach {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 1.15rem;
+      cursor: pointer;
+      padding: 0.3rem;
+      transition: color 0.2s;
+    }
+
+    .compose-attach:hover {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .compose-send {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #ff6b35 0%, #ff3d1f 100%);
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);
+      transition: transform 0.15s, box-shadow 0.15s;
+      flex-shrink: 0;
+    }
+
+    .compose-send:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(255, 107, 53, 0.4);
+    }
+
+    .compose-status {
+      text-align: center;
+      font-size: 0.82rem;
+      color: rgba(255, 180, 120, 0.85);
+      min-height: 1.2rem;
+      padding-top: 0.4rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .topbar-nav a:not(.topbar-logout) { display: none; }
+      .chat-history .message { max-width: 90%; }
+      .hero-title { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <nav class="topbar">
+    <a href="{{ url_for('public_landing') }}" class="topbar-brand">
+      <span class="brand-icon">🛒</span>
+      Smart Retail <span class="brand-ai">AI</span>
+    </a>
+    <div class="topbar-nav">
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('products') }}">Products</a>
+      <a href="{{ url_for('orders') }}">Orders</a>
+      <a href="{{ url_for('customer_chat') }}" class="nav-active">AI Chat</a>
+      <a href="{{ url_for('logout') }}" class="topbar-logout">⏻ Logout</a>
+    </div>
+  </nav>
+
+  <!-- Main Chat Page -->
+  <main class="chat-page" data-chat-role="user">
+
+    <!-- Hero -->
+    <div class="hero-section">
+      <div class="hero-badge">AI-Powered Assistant</div>
+      <h1 class="hero-title">How can <em>I</em> help you today?</h1>
+      <p class="hero-subtitle">Ask me anything about products, stock, offers, trends or analytics.</p>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="chat-container">
+
+      <!-- Date Divider -->
+      <div class="date-divider"><span>Today</span></div>
+
+      <!-- Chat History -->
+      <div class="chat-history" id="chatHistory"></div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <div class="quick-actions-label">Quick Actions</div>
+        <div class="quick-actions-row">
+          <button class="qa-chip chat-chip" type="button"><span class="qa-icon">📈</span> Trending Products</button>
+          <button class="qa-chip chat-chip" type="button"><span class="qa-icon">📦</span> Low Stock Alerts</button>
+          <button class="qa-chip chat-chip" type="button"><span class="qa-icon">🏷️</span> Active Offers</button>
+          <button class="qa-chip chat-chip" type="button"><span class="qa-icon">🚫</span> Out of Stock</button>
+          <button class="qa-chip chat-chip" type="button"><span class="qa-icon">⭐</span> Top Performing</button>
+        </div>
+      </div>
+
+      <!-- Compose -->
+      <div class="compose-bar">
+        <div class="compose-wrapper">
+          <input id="messageInput" class="compose-input" placeholder="Type your message here..." />
+          <button class="compose-attach" type="button" aria-label="Attach">📎</button>
+          <button id="sendBtn" class="compose-send" type="button" aria-label="Send">➤</button>
+        </div>
+        <p class="compose-status" id="chatStatus" aria-live="polite"></p>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+</body>
+</html>

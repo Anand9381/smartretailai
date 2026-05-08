@@ -1,0 +1,90 @@
+[
+  {
+    "productId": 1,
+    "name": "Wireless Headphones Pro",
+    "stock": 45,
+    "stockStatus": "In Stock",
+    "trendingScore": 82,
+    "views": 4200,
+    "cartAdds": 980,
+    "activeOffer": "10% Discount",
+    "performance": "Good"
+  },
+  {
+    "productId": 2,
+    "name": "Smart Watch Ultra",
+    "stock": 12,
+    "stockStatus": "Low Stock",
+    "trendingScore": 96,
+    "views": 6800,
+    "cartAdds": 2100,
+    "activeOffer": "No Active Offer",
+    "performance": "Excellent"
+  },
+  {
+    "productId": 3,
+    "name": "Designer Sunglasses",
+    "stock": 60,
+    "stockStatus": "In Stock",
+    "trendingScore": 74,
+    "views": 3100,
+    "cartAdds": 700,
+    "activeOffer": "Flat ₹50 Off",
+    "performance": "Moderate"
+  },
+  {
+    "productId": 4,
+    "name": "Premium Coffee Maker",
+    "stock": 25,
+    "stockStatus": "In Stock",
+    "trendingScore": 63,
+    "views": 2200,
+    "cartAdds": 420,
+    "activeOffer": "Free Shipping",
+    "performance": "Stable"
+  },
+  {
+    "productId": 5,
+    "name": "Wireless Earbuds Air",
+    "stock": 18,
+    "stockStatus": "Critical Stock",
+    "trendingScore": 91,
+    "views": 5900,
+    "cartAdds": 1700,
+    "activeOffer": "Bundle Discount",
+    "performance": "Very Good"
+  },
+  {
+    "productId": 6,
+    "name": "Fitness Band Pro",
+    "stock": 70,
+    "stockStatus": "In Stock",
+    "trendingScore": 98,
+    "views": 7200,
+    "cartAdds": 2600,
+    "activeOffer": "TECH30 - 30% OFF",
+    "performance": "Top Selling"
+  },
+  {
+    "productId": 7,
+    "name": "Urban Travel Backpack",
+    "stock": 30,
+    "stockStatus": "In Stock",
+    "trendingScore": 69,
+    "views": 2500,
+    "cartAdds": 530,
+    "activeOffer": "15% Off on Buy 2",
+    "performance": "Growing"
+  },
+  {
+    "productId": 8,
+    "name": "Phone",
+    "stock": 0,
+    "stockStatus": "Out Of Stock",
+    "trendingScore": 28,
+    "views": 1400,
+    "cartAdds": 90,
+    "activeOffer": "No Offer",
+    "performance": "Poor"
+  }
+]

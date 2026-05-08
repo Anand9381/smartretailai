@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Detail | SmartRetailAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/extra.css') }}" />
+</head>
+<body class="landing-page">
+  <nav class="navbar">
+    <a href="{{ url_for('public_landing') }}" class="navbar-brand">SmartRetailAI</a>
+    <div class="navbar-menu">
+      <a href="{{ url_for('dashboard') }}" class="text-link">Dashboard</a>
+      <a href="{{ url_for('products') }}" class="text-link">Products</a>
+      <a href="{{ url_for('orders') }}" class="text-link">Orders</a>
+      <a href="{{ url_for('logout') }}" class="btn btn-primary">Logout</a>
+    </div>
+  </nav>
+
+  <section class="detail-hero">
+    <div class="container">
+      {% if product %}
+        <span class="badge badge-primary"># {{ product.category }}</span>
+        <span class="badge badge-primary">{{ product.badge or 'Featured' }}</span>
+        <h1>{{ product.name }}</h1>
+        <p>{{ product.desc }}</p>
+      {% else %}
+        <span class="badge badge-primary"># Product</span>
+        <span class="badge badge-primary">Featured</span>
+        <h1>Wireless Headphones Pro</h1>
+        <p>Premium immersive sound experience</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="detail-body">
+    <div class="container detail-grid">
+      <div class="detail-left">
+        <a href="{{ url_for('products') }}" class="btn btn-secondary" style="margin-bottom:1rem">← Back to Catalog</a>
+        <div class="detail-card card">
+          <img class="detail-main-image" src="{{ product.image if product else 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1200&auto=format&fit=crop' }}" alt="{{ product.name if product else 'Headphones' }}" />
+          <h3>About This Product</h3>
+          <p>{{ product.desc if product else 'Crafted for audiophiles and professionals, Wireless Headphones Pro delivers high-fidelity sound with active noise cancellation and adaptive EQ. Designed for comfort during long listening sessions.' }}</p>
+          <h3>Key Features</h3>
+          <ul>
+            <li>Active noise cancellation</li>
+            <li>30-hour battery life</li>
+            <li>IPX4 splash resistance</li>
+            <li>Fast charging (10 min = 3 hrs)</li>
+          </ul>
+        </div>
+      </div>
+
+      <aside class="detail-right card">
+        <h4>Product Info</h4>
+        <ul class="info-list">
+          <li><span>Brand</span><strong>{{ product.category if product else 'SmartAudio' }}</strong></li>
+          <li><span>Stock</span><strong>{{ product.stock if product else 24 }} units</strong></li>
+          <li><span>Rating</span><strong>4.8 / 5</strong></li>
+          <li><span>Delivery</span><strong>1-2 days</strong></li>
+          <li><span>Warranty</span><strong>1 Year</strong></li>
+        </ul>
+
+        <div class="price-box">
+          <div class="price-title">Price</div>
+          <div class="price-value">${{ '%.2f'|format(product.price) if product else '199.00' }}</div>
+          <div class="price-note">Limited discount active</div>
+        </div>
+
+        <div class="detail-actions" data-product-detail
+             data-slug="{{ product.slug if product else 'headphones-pro' }}"
+             data-name="{{ product.name if product else 'Wireless Headphones Pro' }}"
+             data-category="{{ product.category if product else 'Electronics' }}"
+             data-price="{{ '%.2f'|format(product.price) if product else '199.00' }}"
+             data-stock="{{ product.stock if product else 24 }}"
+             data-image="{{ product.image if product else 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=700' }}"
+             data-desc="{{ product.desc if product else 'Premium immersive sound experience' }}">
+          <button class="btn btn-primary" style="width:100%" id="detailAddToCart">Add to Cart</button>
+          <button class="btn btn-secondary" style="width:100%;margin-top:0.7rem" id="detailBuyNow">Place Order</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <script src="{{ url_for('static', filename='js/products.js') }}"></script>
+</body>
+</html>

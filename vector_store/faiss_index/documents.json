@@ -1,0 +1,26 @@
+[
+  {
+    "source": "analytics_business_rules.md",
+    "content": "# Analytics Business Rules\n\nAnalytics Business Rules\n\n- Trending products: recent sales significantly higher than baseline.\n- Low stock threshold: 20 units.\n- Flag spikes for manual review if no promotion explains them.\n- Prioritize restocking fast-moving low-stock items.\n\n"
+  },
+  {
+    "source": "faq.md",
+    "content": "# Customer Support FAQ\n\nFAQ\n\n- How to place an order: Add items to cart and complete checkout.\n- How to track order: Use the Orders page after logging in.\n- Payment methods: UPI, Credit/Debit card, Net banking.\n- Cancelation: Orders can be canceled before they ship.\n\n"
+  },
+  {
+    "source": "inventory_rules.md",
+    "content": "# Inventory Rules\n\nInventory Rules\n\n- Reorder point: when stock <= 20 for fast-moving SKUs.\n- Safety stock: keep at least 10% of average weekly demand.\n- Bulk orders should be split across multiple suppliers when possible.\n\n"
+  },
+  {
+    "source": "return_policy.md",
+    "content": "# Return Policy\n\nReturn Policy\n\n- Most items can be returned within 7 days of delivery if unused and in original packaging.\n- Some categories (personal care, gift cards) may be non-returnable.\n- Refunds processed after item inspection (5-7 business days).\n- Exchanges depend on stock availability; refunds offered when exchange is not possible.\n\n"
+  },
+  {
+    "source": "shipping_policy.md",
+    "content": "# Shipping Policy\n\nShipping Policy\n\n- Orders are processed within 1-2 business days.\n- Standard delivery: 3-7 business days depending on destination.\n- Free standard shipping on eligible orders over the site minimum.\n- Customers will receive tracking updates once the package ships.\n- Please report damaged shipments within 48 hours of delivery.\n\n"
+  },
+  {
+    "source": "warranty_rules.md",
+    "content": "# Warranty Rules\n\nWarranty Rules\n\n- Electronics: typically 6-12 months limited warranty.\n- Accessories: 3-6 months limited warranty.\n- Warranty covers manufacturing defects and hardware failure under normal use.\n- Physical damage, water ingress, and unauthorized repairs are excluded.\n\n"
+  }
+]

@@ -1,0 +1,74 @@
+[
+  {
+    "productId": 1,
+    "name": "Wireless Headphones Pro",
+    "salesTrend": "Increasing",
+    "salesGrowth": "+18%",
+    "reason": "High demand for premium wireless audio products.",
+    "futurePrediction": "Sales likely to remain stable with moderate growth.",
+    "stockPrediction": "Current stock sufficient for next 30 days."
+  },
+  {
+    "productId": 2,
+    "name": "Smart Watch Ultra",
+    "salesTrend": "Rapid Increase",
+    "salesGrowth": "+38%",
+    "reason": "Health tracking features and premium design increased customer interest.",
+    "futurePrediction": "Sales expected to increase further during upcoming fitness campaigns.",
+    "stockPrediction": "May go out of stock within 2 weeks if demand continues."
+  },
+  {
+    "productId": 3,
+    "name": "Designer Sunglasses",
+    "salesTrend": "Stable",
+    "salesGrowth": "+8%",
+    "reason": "Consistent seasonal fashion demand.",
+    "futurePrediction": "Moderate growth expected during summer season.",
+    "stockPrediction": "Stock levels currently healthy."
+  },
+  {
+    "productId": 4,
+    "name": "Premium Coffee Maker",
+    "salesTrend": "Slow Growth",
+    "salesGrowth": "+5%",
+    "reason": "Steady demand from home and kitchen customers.",
+    "futurePrediction": "Sales likely to remain consistent.",
+    "stockPrediction": "No stock shortage expected."
+  },
+  {
+    "productId": 5,
+    "name": "Wireless Earbuds Air",
+    "salesTrend": "Strong Increase",
+    "salesGrowth": "+29%",
+    "reason": "Bundle discounts improved customer conversions.",
+    "futurePrediction": "Demand likely to increase during festival sales.",
+    "stockPrediction": "Critical stock warning if sales continue rising."
+  },
+  {
+    "productId": 6,
+    "name": "Fitness Band Pro",
+    "salesTrend": "Very High Growth",
+    "salesGrowth": "+42%",
+    "reason": "TECH30 campaign significantly increased product engagement and purchases.",
+    "futurePrediction": "Expected to become top selling sports product next month.",
+    "stockPrediction": "Additional stock recommended to avoid future shortages."
+  },
+  {
+    "productId": 7,
+    "name": "Urban Travel Backpack",
+    "salesTrend": "Growing",
+    "salesGrowth": "+14%",
+    "reason": "Travel demand and combo offers increased visibility.",
+    "futurePrediction": "Sales may improve further during holiday seasons.",
+    "stockPrediction": "Current inventory sufficient."
+  },
+  {
+    "productId": 8,
+    "name": "Phone",
+    "salesTrend": "Declining",
+    "salesGrowth": "-52%",
+    "reason": "Out-of-stock status reduced customer purchases and engagement.",
+    "futurePrediction": "Sales likely to continue decreasing unless restocked soon.",
+    "stockPrediction": "Immediate restocking recommended."
+  }
+]

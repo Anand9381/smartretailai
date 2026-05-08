@@ -1,0 +1,9 @@
+productId,name,category,price,currentStock,stockStatus,rating,activeOffer,trendingScore,monthlyViews,cartAdds,monthlySales,lastMonthSales,returnRate,customerSatisfaction,salesGrowth
+1,Wireless Headphones Pro,Electronics,190,45,In Stock,4.7,10% Discount,82,4200,980,125,110,4.2,91,13.6
+2,Smart Watch Ultra,Electronics,349,12,Low Stock,4.9,None,96,6800,2100,230,180,3.1,95,27.7
+3,Designer Sunglasses,Fashion,129,60,In Stock,4.5,Flat 50 Off,74,3100,700,95,88,2.4,88,7.9
+4,Premium Coffee Maker,Home & Kitchen,89,25,In Stock,4.3,Free Shipping,63,2200,420,70,65,3.8,84,7.6
+5,Wireless Earbuds Air,Electronics,149,18,Critical Stock,4.6,Bundle Discount,91,5900,1700,210,160,4.5,90,31.2
+6,Fitness Band Pro,Sports,79,70,In Stock,4.8,TECH30,98,7200,2600,310,240,2.1,96,29.1
+7,Urban Travel Backpack,Travel,119,30,In Stock,4.4,15% Buy2,69,2500,530,82,72,2.9,87,13.8
+8,Phone,Electronics,100,0,Out Of Stock,4.1,None,28,1400,90,20,45,6.8,70,-55.5

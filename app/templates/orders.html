@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Orders | SmartRetailAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/ecommerce.css') }}" />
+</head>
+<body class="ecommerce-page retail-shell">
+  <nav class="retail-topbar">
+    <a href="{{ url_for('public_landing') }}" class="retail-brand">
+      <span class="retail-brand-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 7V6a4 4 0 1 1 8 0v1h2.4a1 1 0 0 1 1 .8l1.4 8a1 1 0 0 1-1 1.2H4.2a1 1 0 0 1-1-1.2l1.4-8a1 1 0 0 1 1-.8H8Zm2 0h4V6a2 2 0 1 0-4 0v1Z"/>
+        </svg>
+      </span>
+      <span>Smart <strong>Retail</strong></span>
+    </a>
+    <div class="retail-nav-links">
+      <a href="{{ url_for('public_landing') }}">Home</a>
+      <a href="{{ url_for('products') }}">Products</a>
+      <a href="{{ url_for('dashboard') }}">Categories</a>
+      <a href="{{ url_for('dashboard') }}">Deals</a>
+      <a href="{{ url_for('orders') }}" class="active">Analytics</a>
+    </div>
+    <div class="retail-nav-actions">
+      <a href="{{ url_for('products') }}" class="retail-icon-link" aria-label="Search">
+        <svg viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m1.85-5.15a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>
+      </a>
+      <a href="{{ url_for('cart_page') }}" class="retail-icon-link retail-cart-link" aria-label="Cart">
+        <svg viewBox="0 0 24 24"><path d="M2 3h2l2.2 10.2a1 1 0 0 0 1 .8h9.9a1 1 0 0 0 1-.7L21 6H6"/><circle cx="9" cy="19" r="1.6"/><circle cx="18" cy="19" r="1.6"/></svg>
+        <span id="navCartCount" class="retail-badge">0</span>
+      </a>
+      <a href="{{ url_for('dashboard') }}" class="retail-profile-link">
+        <span class="retail-profile-avatar">
+          <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0"/></svg>
+        </span>
+        <span>Account</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="retail-page retail-orders-page container">
+    <aside class="orders-sidebar retail-panel">
+      <div class="sidebar-links">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('dashboard') }}">Profile</a>
+        <a href="{{ url_for('orders') }}" class="active">Orders</a>
+        <a href="{{ url_for('cart_page') }}">Cart <span id="sidebarCartCount" class="sidebar-pill">0</span></a>
+        <a href="{{ url_for('products') }}">Wishlist</a>
+        <a href="{{ url_for('dashboard') }}">Addresses</a>
+        <a href="{{ url_for('dashboard') }}">Payment Methods</a>
+        <a href="{{ url_for('dashboard') }}">Settings</a>
+      </div>
+      <a href="{{ url_for('logout') }}" class="sidebar-logout">Logout</a>
+    </aside>
+
+    <section class="orders-content">
+      <div class="orders-top-row">
+        <div class="retail-hero compact">
+          <div>
+            <h1>My <span>Orders</span></h1>
+            <p>Track, view and manage all your orders</p>
+          </div>
+        </div>
+        <label class="orders-filter-wrap">
+          <select id="orderStatusFilter" class="orders-filter-select">
+            <option value="All">All Orders</option>
+            <option value="Ordered">Ordered</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Delivered">Delivered</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="order-message retail-panel" id="orderMessage" hidden></div>
+
+      <section class="orders-stats-grid">
+        <article class="stats-card all">
+          <span class="stats-icon">1</span>
+          <div>
+            <strong id="totalOrders">0</strong>
+            <span>All Orders</span>
+          </div>
+        </article>
+        <article class="stats-card ordered">
+          <span class="stats-icon">2</span>
+          <div>
+            <strong id="totalOrdered">0</strong>
+            <span>Ordered</span>
+          </div>
+        </article>
+        <article class="stats-card shipped">
+          <span class="stats-icon">3</span>
+          <div>
+            <strong id="totalShipped">0</strong>
+            <span>Shipped</span>
+          </div>
+        </article>
+        <article class="stats-card delivered">
+          <span class="stats-icon">4</span>
+          <div>
+            <strong id="totalDelivered">0</strong>
+            <span>Delivered</span>
+          </div>
+        </article>
+      </section>
+
+      <div class="orders-list-detailed" id="ordersList"></div>
+    </section>
+  </main>
+
+  <section class="order-modal" id="orderDetailModal" hidden>
+    <div class="order-modal-backdrop" data-close-order-modal></div>
+    <div class="order-modal-card retail-panel">
+      <button class="order-modal-close" type="button" data-close-order-modal>Close</button>
+      <div id="orderDetailContent"></div>
+    </div>
+  </section>
+
+  <script>window.__USER_ID__ = "{{ session.get('user_id') or '' }}";</script>
+  <script src="{{ url_for('static', filename='js/products.js') }}"></script>
+</body>
+</html>

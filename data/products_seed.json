@@ -1,0 +1,82 @@
+[
+  {
+    "slug": "headphones-pro",
+    "name": "Wireless Headphones Pro",
+    "category": "Electronics",
+    "price": 190.0,
+    "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=700",
+    "desc": "Noise cancellation with 30-hour battery life. 10% discount applied with free exchanges and 7-day return window.",
+    "stock": 34,
+    "badge": "Trending"
+  },
+  {
+    "slug": "watch-ultra",
+    "name": "Smart Watch Ultra",
+    "category": "Electronics",
+    "price": 349.0,
+    "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=700",
+    "desc": "Premium smartwatch with health tracking and stylish metallic design.",
+    "stock": 12,
+    "badge": "New"
+  },
+  {
+    "slug": "designer-shades",
+    "name": "Designer Sunglasses",
+    "category": "Fashion",
+    "price": 129.0,
+    "image": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=700",
+    "desc": "UV400 polarized sunglasses with lightweight frame and modern stylish look.",
+    "stock": 58,
+    "badge": "Hot"
+  },
+  {
+    "slug": "coffee-maker",
+    "name": "Premium Coffee Maker",
+    "category": "Home & Kitchen",
+    "price": 89.0,
+    "image": "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=700",
+    "desc": "Programmable coffee maker with custom brew settings, free shipping, and 30-day warranty exchange.",
+    "stock": 6,
+    "badge": "Sale"
+  },
+  {
+    "slug": "earbuds-air",
+    "name": "Wireless Earbuds Air",
+    "category": "Electronics",
+    "price": 149.0,
+    "image": "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=700",
+    "desc": "Compact wireless earbuds with deep bass audio and special bundle discounts.",
+    "stock": 22,
+    "badge": "Popular"
+  },
+  {
+    "slug": "fitness-band",
+    "name": "Fitness Band Pro",
+    "category": "Sports",
+    "price": 79.0,
+    "image": "https://images.unsplash.com/photo-1576243345690-4e4b79b63288?w=700",
+    "desc": "Smart fitness band with heart rate, sleep, step, and workout tracking. TECH30 coupon gives 30% off.",
+    "stock": 41,
+    "badge": "Smart Pick"
+  },
+  {
+    "slug": "travel-backpack",
+    "name": "Urban Travel Backpack",
+    "category": "Travel",
+    "price": 119.0,
+    "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=700",
+    "desc": "Anti-theft travel backpack with padded laptop sleeve and 15% off on buying two.",
+    "stock": 18,
+    "badge": "New Arrival"
+  },
+  {
+    "slug": "phone",
+    "name": "Phone",
+    "category": "Electronics",
+    "price": 100.0,
+    "image": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=700",
+    "desc": "Latest smartphone with advanced features and modern performance.",
+    "stock": 0,
+    "badge": "Out"
+  }
+]

@@ -1,0 +1,16 @@
+Flask==3.0.3
+pandas
+scikit-learn
+numpy
+pymongo
+python-dotenv
+langchain
+langchain-community
+langchain-huggingface
+langchain-groq
+sentence-transformers
+faiss-cpu
+pytest
+pytest-flask
+pytest-mock
+gunicorn

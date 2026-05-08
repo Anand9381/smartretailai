@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ML Forecast | SmartRetailAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --neon-orange: #ff7b2f;
+      --neon-green: #2fff7b;
+      --neon-red: #ff2f2f;
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+    }
+
+    .main-content {
+      padding: 2rem;
+      background: radial-gradient(circle at top right, rgba(255, 123, 47, 0.05), transparent),
+                  radial-gradient(circle at bottom left, rgba(47, 255, 123, 0.05), transparent);
+    }
+
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      transition: all 0.3s ease;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(255, 123, 47, 0.3);
+      transform: translateY(-5px);
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.5));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-title::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: var(--neon-orange);
+      border-radius: 2px;
+      box-shadow: 0 0 10px var(--neon-orange);
+    }
+
+    .forecast-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 350px;
+      width: 100%;
+    }
+
+    .product-card {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .product-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .badge-ai {
+      background: linear-gradient(135deg, var(--neon-orange), #ff4a1f);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      box-shadow: 0 0 15px rgba(255, 123, 47, 0.4);
+    }
+
+    .growth-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+    }
+
+    .growth-positive { color: var(--neon-green); text-shadow: 0 0 10px rgba(47, 255, 123, 0.3); }
+    .growth-negative { color: var(--neon-red); text-shadow: 0 0 10px rgba(255, 47, 47, 0.3); }
+
+    .progress-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      transition: width 1s ease-out;
+    }
+
+    .insight-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+
+    .insight-card {
+      background: rgba(255, 255, 255, 0.02);
+      border-left: 3px solid var(--neon-orange);
+      padding: 1rem;
+      border-radius: 0 12px 12px 0;
+      animation: slideIn 0.5s ease-out forwards;
+      opacity: 0;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(-20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .insight-icon {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header"><a href="{{ url_for('public_landing') }}" class="sidebar-brand">SmartRetailAI</a></div>
+      <nav class="sidebar-nav">
+        <a href="{{ url_for('admin_chat') }}" class="nav-item">🤖 <span>Assistant</span></a>
+        <a href="{{ url_for('admin_inventory') }}" class="nav-item">📦 <span>Inventory</span></a>
+        <a href="{{ url_for('admin_forecast') }}" class="nav-item active">📈 <span>ML Forecast</span></a>
+        <a href="{{ url_for('admin_analytics') }}" class="nav-item">📉 <span>Power BI Analytics</span></a>
+        <a href="{{ url_for('admin_orders') }}" class="nav-item">🧾 <span>Orders</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <p class="user-role">Signed in as admin</p>
+        <a href="{{ url_for('logout') }}" class="logout-btn" style="display:block; text-align:center; text-decoration:none;">Logout</a>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="dashboard-header" style="margin-bottom: 2rem;">
+        <div class="header-left">
+          <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -1px;">ML Demand Forecast</h1>
+          <p class="text-muted">Azure Data Factory & Databricks AI Intelligence</p>
+        </div>
+      </header>
+
+      <!-- Charts Section -->
+      <div class="forecast-grid">
+        <div class="glass-card" style="grid-column: span 2;">
+          <h2 class="section-title">Demand Forecast Analysis</h2>
+          <div class="chart-container">
+            <canvas id="demandLineChart"></canvas>
+          </div>
+        </div>
+        <div class="glass-card">
+          <h2 class="section-title">Demand Correlation</h2>
+          <div class="chart-container">
+            <canvas id="correlationScatterPlot"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product Cards Section -->
+      <h2 class="section-title">Growth Percentage Analytics</h2>
+      <div class="forecast-grid" id="productGrowthCards">
+        <!-- Dynamic cards load here -->
+      </div>
+
+      <!-- AI Insights Section -->
+      <h2 class="section-title">AI-Powered Business Insights</h2>
+      <div class="insight-list" id="aiInsights">
+        <!-- Dynamic insights load here -->
+      </div>
+    </main>
+  </div>
+
+  <script>
+    async function loadForecastData() {
+      try {
+        const response = await fetch('/api/admin/forecast-data');
+        const data = await response.json();
+        renderLineChart(data);
+        renderScatterPlot(data);
+        renderGrowthCards(data);
+        renderInsights(data);
+      } catch (error) {
+        console.error('Error loading forecast data:', error);
+      }
+    }
+
+    function renderLineChart(data) {
+      const ctx = document.getElementById('demandLineChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.map(p => p.name),
+          datasets: [
+            {
+              label: 'Current Monthly Sales',
+              data: data.map(p => p.monthlySales),
+              borderColor: '#ff7b2f',
+              backgroundColor: 'rgba(255, 123, 47, 0.1)',
+              borderWidth: 3,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#ff7b2f',
+              pointBorderColor: '#fff',
+              pointRadius: 4
+            },
+            {
+              label: 'Predicted Future Sales',
+              data: data.map(p => p.predictedFutureSales),
+              borderColor: '#2fff7b',
+              backgroundColor: 'rgba(47, 255, 123, 0.1)',
+              borderWidth: 3,
+              borderDash: [5, 5],
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#2fff7b',
+              pointBorderColor: '#fff',
+              pointRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 12, weight: '500' } }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: 'rgba(255, 255, 255, 0.5)' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: 'rgba(255, 255, 255, 0.5)' }
+            }
+          }
+        }
+      });
+    }
+
+    function renderScatterPlot(data) {
+      const ctx = document.getElementById('correlationScatterPlot').getContext('2d');
+      new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [{
+            label: 'Sales Correlation',
+            data: data.map(p => ({ x: p.monthlySales, y: p.predictedFutureSales })),
+            backgroundColor: '#ff7b2f',
+            borderColor: '#fff',
+            borderWidth: 2,
+            pointRadius: 8,
+            pointHoverRadius: 10,
+            pointShadowBlur: 10,
+            pointShadowColor: 'rgba(255, 123, 47, 0.5)'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  const p = data[context.dataIndex];
+                  return `${p.name}: Current ${p.monthlySales} | Predicted ${p.predictedFutureSales}`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              title: { display: true, text: 'Predicted Sales', color: 'rgba(255, 255, 255, 0.5)' },
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: 'rgba(255, 255, 255, 0.5)' }
+            },
+            x: {
+              title: { display: true, text: 'Monthly Sales', color: 'rgba(255, 255, 255, 0.5)' },
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: 'rgba(255, 255, 255, 0.5)' }
+            }
+          }
+        }
+      });
+    }
+
+    function renderGrowthCards(data) {
+      const container = document.getElementById('productGrowthCards');
+      data.forEach(p => {
+        const growth = ((p.predictedFutureSales - p.monthlySales) / p.monthlySales * 100).toFixed(1);
+        const isPositive = growth >= 0;
+        
+        const card = document.createElement('div');
+        card.className = 'glass-card product-card';
+        card.innerHTML = `
+          <div class="product-header">
+            <h3 style="font-size: 1.1rem; font-weight: 600;">${p.name}</h3>
+            <span class="badge-ai">AI Forecast</span>
+          </div>
+          <div>
+            <div class="growth-value ${isPositive ? 'growth-positive' : 'growth-negative'}">
+              ${isPositive ? '↑' : '↓'} ${Math.abs(growth)}%
+            </div>
+            <p style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.5);">Growth Projection</p>
+          </div>
+          <div class="progress-container">
+            <div class="progress-bar" style="width: ${Math.min(Math.max(50 + parseFloat(growth), 10), 100)}%; background: ${isPositive ? 'var(--neon-green)' : 'var(--neon-red)'}; box-shadow: 0 0 10px ${isPositive ? 'var(--neon-green)' : 'var(--neon-red)'};"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: rgba(255, 255, 255, 0.4);">
+            <span>Current: ${p.monthlySales}</span>
+            <span>Next Target: ${p.predictedFutureSales}</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderInsights(data) {
+      const container = document.getElementById('aiInsights');
+      data.forEach((p, index) => {
+        const growth = ((p.predictedFutureSales - p.monthlySales) / p.monthlySales * 100);
+        let insightText = '';
+        let icon = '';
+        
+        if (growth > 10) {
+          insightText = `${p.name} expected demand increase next month. Scaling inventory recommended.`;
+          icon = '🚀';
+        } else if (growth < -5) {
+          insightText = `${p.name} showing potential decline. Optimize stock levels and consider promotions.`;
+          icon = '📉';
+        } else {
+          insightText = `${p.name} showing stable future demand. Maintain current inventory levels.`;
+          icon = '💎';
+        }
+
+        const card = document.createElement('div');
+        card.className = 'insight-card';
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.innerHTML = `
+          <div class="insight-icon">${icon}</div>
+          <p style="font-weight: 500; font-size: 0.9rem; line-height: 1.4;">${insightText}</p>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadForecastData);
+  </script>
+</body>
+</html>

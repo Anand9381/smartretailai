@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard | SmartRetailAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header"><a href="{{ url_for('public_landing') }}" class="sidebar-brand">SmartRetailAI</a></div>
+      <nav class="sidebar-nav">
+        <a href="{{ url_for('admin_chat') }}" class="nav-item">🤖 <span>Assistant</span></a>
+        <a href="{{ url_for('admin_inventory') }}" class="nav-item">📦 <span>Inventory</span></a>
+        <a href="{{ url_for('admin_forecast') }}" class="nav-item">📈 <span>ML Forecast</span></a>
+        <a href="{{ url_for('admin_analytics') }}" class="nav-item">📉 <span>Power BI Analytics</span></a>
+        <a href="{{ url_for('admin_orders') }}" class="nav-item">🧾 <span>Orders</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <p class="user-role">Signed in as admin</p>
+        <a href="{{ url_for('logout') }}" class="logout-btn" style="display:block; text-align:center; text-decoration:none;">Logout</a>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="dashboard-header">
+        <div class="header-left"><h1>Admin Dashboard</h1><p class="text-muted">Smart retail overview</p></div>
+        <div class="header-right">
+          <div class="date-range">
+            <select aria-label="Date range">
+              <option>Last 7 days</option>
+              <option>Last 30 days</option>
+              <option>Last 90 days</option>
+            </select>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <input id="adminMicInput" placeholder="Say something to analyze..." style="padding:0.5rem 0.75rem; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:var(--text-white);" />
+            <button id="adminMicBtn" class="notification-btn" title="Record speech">🎤</button>
+            <button id="adminMicPerform" class="notification-btn" title="Perform">⏎</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="kpi-section">
+        <div class="kpi-card card"><div class="kpi-label">Total Sales</div><div class="kpi-value">$45,231</div><div class="kpi-change positive">+12.5%</div></div>
+        <div class="kpi-card card"><div class="kpi-label">Total Orders</div><div class="kpi-value">1,248</div><div class="kpi-change positive">+8.2%</div></div>
+        <div class="kpi-card card"><div class="kpi-label">Revenue</div><div class="kpi-value">$88,904</div><div class="kpi-change positive">+9.3%</div></div>
+        <div class="kpi-card card"><div class="kpi-label">Alerts</div><div class="kpi-value" style="color:#ef4444">5</div><div class="kpi-change">2 critical</div></div>
+      </section>
+
+      <section class="charts-section">
+        <div class="chart-card card"><div class="chart-header"><h3>Sales Trends</h3></div><div class="chart-container"><canvas id="salesChart"></canvas></div></div>
+        <div class="chart-card card"><div class="chart-header"><h3>Category Distribution</h3></div><div class="chart-container"><canvas id="categoryChart"></canvas></div></div>
+      </section>
+
+      <section class="powerbi-section" style="margin-top: 2rem;">
+        <div class="section-header"><h2>Power BI Intelligence</h2></div>
+        <div class="card" style="padding: 0; overflow: hidden; border-radius: 20px; background: #05060c;">
+          <iframe 
+            src="https://app.powerbi.com/reportEmbed?reportId=b25d55f1-4089-44ca-9fd7-71f3d36f4e62&autoAuth=true&ctid=78303038-f9b4-463e-9080-60b2496e5793&filterPaneEnabled=false&navContentPaneEnabled=false" 
+            style="width: 100%; height: 600px; border: none;" 
+            allowFullScreen="true">
+          </iframe>
+        </div>
+      </section>
+
+      <section class="alerts-section">
+        <div class="section-header"><h2>Anomaly Alerts</h2></div>
+        <div class="alerts-grid">
+          <div class="alert-card alert-critical card"><div class="alert-icon">⚠</div><div class="alert-content"><h4>Low Stock</h4><p>Premium Yoga Mat only 3 left</p></div><button class="alert-action">Review</button></div>
+          <div class="alert-card alert-warning card"><div class="alert-icon">⚡</div><div class="alert-content"><h4>Sales Spike</h4><p>Wireless Headphones up 340%</p></div><button class="alert-action">Analyze</button></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dashboard_mic.js') }}"></script>
+</body>
+</html>
