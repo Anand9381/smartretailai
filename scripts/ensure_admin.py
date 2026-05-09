@@ -7,7 +7,7 @@ email = os.environ.get('ADMIN_EMAIL', 'admin@example.com')
 password = os.environ.get('ADMIN_PASSWORD', 'Admin123!')
 
 try:
-    print('Cosmos connection:', test_connection())
+    print('MongoDB connection:', test_connection())
 except Exception as exc:
     print('Connection test failed:', exc)
     raise SystemExit(1)

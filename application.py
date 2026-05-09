@@ -1,13 +1,14 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
-import ml_model
 import os
 import json
+import csv
 from functools import wraps
 from bson import ObjectId
 from datetime import datetime
 from db import orders_collection, users_collection, carts_collection, products_collection, sales_collection
 from routes.chat_api import chat_api
+from services.ml_service import detect_anomalies_lazy, predict_sales_lazy
 import requests
 try:
     import msal
@@ -91,7 +92,14 @@ def _ensure_bootstrap_users():
 
 # seed DB at startup (safe: only inserts when empty)
 #_seed_db_if_empty()
-_ensure_bootstrap_users()
+if os.environ.get("ENABLE_BOOTSTRAP_USERS", "false").strip().lower() in ("1", "true", "yes"):
+    try:
+        # Bootstrap users if requested. Guard against DB/network errors so
+        # the app can still start when the database is unreachable at import time.
+        _ensure_bootstrap_users()
+    except Exception as exc:
+        # Log and continue; runtime DB operations will surface errors where they are handled.
+        print(f"[application.py] Warning: bootstrap users skipped due to error: {exc}")
 
 
 @app.route("/")
@@ -118,6 +126,8 @@ def login_required(f):
     @wraps(f)
     def inner(*args, **kwargs):
         if not session.get('user_id'):
+            if request.path.startswith('/api/'):
+                return jsonify({'ok': False, 'error': 'authentication required'}), 401
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return inner
@@ -127,6 +137,8 @@ def admin_required(f):
     @wraps(f)
     def inner(*args, **kwargs):
         if session.get('role') != 'admin':
+            if request.path.startswith('/api/') or request.path.startswith('/admin/powerbi/'):
+                return jsonify({'ok': False, 'error': 'Admin authentication required'}), 403
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return inner
@@ -233,18 +245,20 @@ def api_signup():
     name = data.get('name') or data.get('full_name')
     email = (data.get('email') or '').strip().lower()
     password = data.get('password')
-    role = data.get('role', 'user')
+    requested_role = (data.get('role') or 'user').strip().lower()
+    role = 'admin' if requested_role == 'admin' else 'user'
     admin_secret = data.get('admin_secret')
     if not email or not password:
         return jsonify({'ok': False, 'error': 'email and password required'}), 400
 
-    if users_collection.find_one({'email': email}):
-        return jsonify({'ok': False, 'error': 'user exists'}), 400
+    try:
+        if users_collection.find_one({'email': email}):
+            return jsonify({'ok': False, 'error': 'user exists'}), 400
+    except Exception as exc:
+        return jsonify({'ok': False, 'error': 'database unavailable', 'detail': str(exc)}), 503
 
-    # Only allow creating admin via ADMIN_SECRET environment variable
-    if role == 'admin':
-        if os.environ.get('ADMIN_SECRET') != admin_secret:
-            role = 'user'
+    if role == 'admin' and os.environ.get('ADMIN_SECRET') != admin_secret:
+        return jsonify({'ok': False, 'error': 'Invalid admin secret. Please use Customer Account or enter the correct admin secret.'}), 403
 
     user = {
         'name': name or '',
@@ -252,10 +266,14 @@ def api_signup():
         'password': generate_password_hash(password),
         'role': role,
     }
-    res = users_collection.insert_one(user)
-    session['user_id'] = str(res.inserted_id)
-    session['role'] = role
-    return jsonify({'ok': True})
+    try:
+        users_collection.insert_one(user)
+    except Exception as exc:
+        return jsonify({'ok': False, 'error': 'database unavailable', 'detail': str(exc)}), 503
+    session.pop('user_id', None)
+    session.pop('role', None)
+    redirect = '/login'
+    return jsonify({'ok': True, 'role': role, 'redirect': redirect})
 
 
 @app.route('/api/login', methods=['POST'])
@@ -263,27 +281,26 @@ def api_login():
     data = request.get_json() or {}
     email = (data.get('email') or '').strip().lower()
     password = data.get('password')
+    requested_role = (data.get('role') or 'user').strip().lower()
+    requested_role = 'admin' if requested_role == 'admin' else 'user'
     if not email or not password:
         return jsonify({'ok': False, 'error': 'email and password required'}), 400
 
-    user = users_collection.find_one({'email': email})
+    try:
+        user = users_collection.find_one({'email': email})
+    except Exception as exc:
+        return jsonify({'ok': False, 'error': 'database unavailable', 'detail': str(exc)}), 503
     password_hash = user.get('password') if user else None
     valid_password = bool(password_hash) and check_password_hash(password_hash, password)
     if not user or not valid_password:
-        # Development fallback: create admin user on-the-fly if using the default dev admin creds
-        if email == 'admin@example.com' and password == 'Admin123!':
-            if not user:
-                users_collection.insert_one({'name': 'Admin', 'email': email, 'password': generate_password_hash(password), 'role': 'admin'})
-                user = users_collection.find_one({'email': email})
-            elif not user.get('password'):
-                users_collection.update_one({'_id': user['_id']}, {'$set': {'password': generate_password_hash(password), 'role': 'admin'}})
-            session['user_id'] = str(user.get('_id'))
-            session['role'] = 'admin'
-            return jsonify({'ok': True, 'role': 'admin', 'redirect': '/admin/dashboard', 'dev_admin': True})
         return jsonify({'ok': False, 'error': 'invalid credentials'}), 401
 
+    actual_role = user.get('role', 'user')
+    if requested_role != actual_role:
+        return jsonify({'ok': False, 'error': f'This account is registered as {actual_role}. Please use {actual_role.title()} Login.'}), 403
+
     session['user_id'] = str(user.get('_id'))
-    session['role'] = user.get('role', 'user')
+    session['role'] = actual_role
     redirect = '/admin/dashboard' if session['role'] == 'admin' else '/dashboard'
     return jsonify({'ok': True, 'role': session['role'], 'redirect': redirect})
 
@@ -302,9 +319,9 @@ def api_predict():
     date = request.args.get('date')
     try:
         if day is not None:
-            pred = ml_model.predict_sales(int(day))
+            pred = predict_sales_lazy(int(day))
         elif date is not None:
-            pred = ml_model.predict_sales(date)
+            pred = predict_sales_lazy(date)
         else:
             return jsonify({'ok': False, 'error': 'provide day or date'}), 400
         return jsonify({'ok': True, 'prediction': pred})
@@ -315,7 +332,7 @@ def api_predict():
 @app.route('/api/anomalies')
 def api_anomalies():
     try:
-        df = ml_model.detect_anomalies()
+        df = detect_anomalies_lazy()
         # convert to simple list
         if df.empty:
             return jsonify({'ok': True, 'anomalies': []})
@@ -488,6 +505,7 @@ def api_place_order():
 
 
 @app.route('/api/sales_series')
+@admin_required
 def api_sales_series():
     # return dates and sales from sales collection
     docs = list(_sales.find({}, {'_id': 0}).sort('date', 1))
@@ -497,6 +515,7 @@ def api_sales_series():
 
 
 @app.route('/api/category_share')
+@admin_required
 def api_category_share():
     pipeline = [
         {'$group': {'_id': '$category', 'count': {'$sum': 1}}}
@@ -511,12 +530,14 @@ def api_category_share():
 
 
 @app.route('/api/inventory', methods=['GET'])
+@admin_required
 def api_inventory_list():
     prods = list(_products.find({}, {'_id': 0}))
     return jsonify({'ok': True, 'products': prods})
 
 
 @app.route('/api/inventory', methods=['POST'])
+@admin_required
 def api_inventory_create():
     data = request.get_json() or {}
     required = ['slug', 'name', 'price']
@@ -528,6 +549,7 @@ def api_inventory_create():
 
 
 @app.route('/api/inventory/<slug>', methods=['PUT', 'PATCH'])
+@admin_required
 def api_inventory_update(slug):
     data = request.get_json() or {}
     update = {}
@@ -541,21 +563,184 @@ def api_inventory_update(slug):
 
 
 @app.route('/api/inventory/<slug>', methods=['DELETE'])
+@admin_required
 def api_inventory_delete(slug):
     _products.delete_one({'slug': slug})
     return jsonify({'ok': True})
 
 
+def _build_powerbi_snapshot_data():
+    data_dir = os.path.join(os.path.dirname(__file__), "data")
+    rows = []
+    try:
+        with open(os.path.join(data_dir, "retail_master_dataset.csv"), "r", encoding="utf-8") as fh:
+            rows = list(csv.DictReader(fh))
+    except Exception:
+        rows = []
+
+    labels = []
+    monthly_sales = []
+    predicted_sales = []
+    scatter_points = []
+    stock_risk = {"Low Risk": 0, "Medium Risk": 0, "High Risk": 0}
+
+    for row in rows:
+        name = row.get("name", "")
+        if not name:
+            continue
+        monthly = float(row.get("monthlySales") or 0)
+        growth = float(row.get("salesGrowth") or 0)
+        predicted = max(0, round(monthly * (1 + growth / 100), 1))
+        current_stock = float(row.get("currentStock") or 0)
+        stock_status = str(row.get("stockStatus") or "")
+        views = float(row.get("monthlyViews") or 0)
+        cart_adds = float(row.get("cartAdds") or 0)
+
+        if stock_status in ("Critical Stock", "Out Of Stock"):
+            risk = "High Risk"
+        elif stock_status == "Low Stock":
+            risk = "Medium Risk"
+        else:
+            risk = "Low Risk"
+        stock_risk[risk] += current_stock
+
+        labels.append(name)
+        monthly_sales.append(monthly)
+        predicted_sales.append(predicted)
+        scatter_points.append({
+            "x": monthly,
+            "y": predicted,
+            "r": max(5, min(20, round((views + cart_adds) / 500))),
+            "name": name,
+            "category": row.get("category", "General"),
+        })
+
+    return {
+        "labels": labels,
+        "monthlySales": monthly_sales,
+        "predictedFutureSales": predicted_sales,
+        "stockRiskLabels": list(stock_risk.keys()),
+        "stockRiskValues": list(stock_risk.values()),
+        "scatterPoints": scatter_points,
+    }
+
+
 @app.route("/admin/dashboard")
 @admin_required
 def admin_dashboard():
-    return render_template("admin_dashboard.html")
+    total_sales = 0.0
+    try:
+        total_orders = orders_collection.count_documents({})
+        total_products = products_collection.count_documents({})
+        low_stock_count = products_collection.count_documents({"stock": {"$lte": 10}})
+        for order in orders_collection.find({}, {"total": 1, "amount": 1, "grand_total": 1}):
+            total_sales += float(order.get("total") or order.get("amount") or order.get("grand_total") or 0)
+    except Exception:
+        total_orders = 0
+        total_products = 0
+        low_stock_count = 0
+
+    data_dir = os.path.join(os.path.dirname(__file__), "data")
+
+    def _load_json_file(filename, default):
+        try:
+            with open(os.path.join(data_dir, filename), "r", encoding="utf-8") as fh:
+                return json.load(fh)
+        except Exception:
+            return default
+
+    monitoring_data = _load_json_file("product_monitoring_data.json", [])
+    analytics_data = _load_json_file("analytics_prediction_data.json", [])
+    retail_master_rows = []
+    try:
+        with open(os.path.join(data_dir, "retail_master_dataset.csv"), "r", encoding="utf-8") as fh:
+            retail_master_rows = list(csv.DictReader(fh))
+    except Exception:
+        retail_master_rows = []
+
+    def _growth_value(item):
+        try:
+            return float(str(item.get("salesGrowth", "0")).replace("%", "").replace("+", ""))
+        except Exception:
+            return 0.0
+
+    monitoring_by_name = {item.get("name"): item for item in monitoring_data}
+    top_trending = sorted(monitoring_data, key=lambda item: item.get("trendingScore", 0), reverse=True)[:4]
+    stock_alerts = [
+        item for item in monitoring_data
+        if item.get("stockStatus") in ("Low Stock", "Critical Stock", "Out Of Stock")
+    ]
+    active_offers = [
+        item for item in monitoring_data
+        if str(item.get("activeOffer", "")).lower() not in ("", "none", "no offer", "no active offer")
+    ][:5]
+    high_demand = sorted(analytics_data, key=_growth_value, reverse=True)[:4]
+    restock_priority = [
+        item for item in analytics_data
+        if any(token in str(item.get("stockPrediction", "")).lower() for token in ("out of stock", "critical", "recommended", "2 weeks"))
+    ]
+    restock_priority.sort(key=lambda item: (monitoring_by_name.get(item.get("name"), {}).get("stock", 999), -_growth_value(item)))
+
+    dashboard_insights = {
+        "top_trending": top_trending,
+        "stock_alerts": stock_alerts,
+        "active_offers": active_offers,
+        "high_demand": high_demand,
+        "restock_priority": restock_priority[:4],
+        "monitoring_by_name": monitoring_by_name,
+    }
+
+    stock_status_counts = {}
+    for item in monitoring_data:
+        status = item.get("stockStatus") or "Unknown"
+        stock_status_counts[status] = stock_status_counts.get(status, 0) + 1
+
+    powerbi_snapshot_data = _build_powerbi_snapshot_data()
+    dashboard_chart_data = {
+        "salesLabels": powerbi_snapshot_data["labels"],
+        "monthlySales": powerbi_snapshot_data["monthlySales"],
+        "predictedFutureSales": powerbi_snapshot_data["predictedFutureSales"],
+        "stockStatusLabels": list(stock_status_counts.keys()),
+        "stockStatusValues": list(stock_status_counts.values()),
+    }
+
+    powerbi_public_embed_url = os.getenv("POWERBI_PUBLIC_EMBED_URL") or (
+        "https://app.powerbi.com/reportEmbed"
+        "?reportId=b25d55f1-4089-44ca-9fd7-71f3d36f4e62"
+        "&autoAuth=true"
+        "&ctid=78303038-f9b4-463e-9080-60b2496e5793"
+        "&filterPaneEnabled=false"
+        "&navContentPaneEnabled=false"
+    )
+    powerbi_report_link = os.getenv("POWERBI_REPORT_LINK") or (
+        "https://app.powerbi.com/groups/me/reports/b25d55f1-4089-44ca-9fd7-71f3d36f4e62/3e3960cb6a55302f057c?experience=power-bi&clientSideAuth=0"
+    )
+    return render_template(
+        "admin_dashboard.html",
+        total_sales=round(total_sales, 2),
+        total_orders=total_orders,
+        total_products=total_products,
+        low_stock_count=low_stock_count,
+        powerbi_public_embed_url=powerbi_public_embed_url,
+        powerbi_report_link=powerbi_report_link,
+        dashboard_insights=dashboard_insights,
+        dashboard_chart_data=dashboard_chart_data,
+        powerbi_snapshot_data=powerbi_snapshot_data,
+    )
 
 
 @app.route("/admin/analytics")
 @admin_required
 def admin_analytics():
-    return render_template("admin_analytics.html")
+    powerbi_report_link = os.getenv("POWERBI_REPORT_LINK") or (
+        "https://app.powerbi.com/groups/me/reports/b25d55f1-4089-44ca-9fd7-71f3d36f4e62/3e3960cb6a55302f057c?experience=power-bi"
+    )
+    return render_template(
+        "admin_analytics.html",
+        powerbi_report_link=powerbi_report_link,
+        powerbi_snapshot_data=_build_powerbi_snapshot_data(),
+        powerbi_tenant_id=os.getenv("POWERBI_TENANT_ID", "78303038-f9b4-463e-9080-60b2496e5793"),
+    )
 
 
 @app.route('/admin/powerbi/embed-info')
@@ -579,7 +764,17 @@ def admin_powerbi_embed_info():
     report_id = os.getenv('POWERBI_REPORT_ID')
 
     if not all([client_id, client_secret, tenant_id, group_id, report_id]):
-        return jsonify({'ok': False, 'error': 'Power BI embedding not configured. Set POWERBI_CLIENT_ID, POWERBI_CLIENT_SECRET, POWERBI_TENANT_ID, POWERBI_GROUP_ID, POWERBI_REPORT_ID'}), 400
+        public_embed_url = os.getenv('POWERBI_PUBLIC_EMBED_URL')
+        report_link = os.getenv('POWERBI_REPORT_LINK')
+        if public_embed_url:
+            return jsonify({
+                'ok': True,
+                'mode': 'public',
+                'embedUrl': public_embed_url,
+                'reportLink': report_link,
+                'warning': 'Secure Power BI embedding is not configured. Using public embed URL fallback.',
+            })
+        return jsonify({'ok': False, 'error': 'Power BI embedding not configured. Set POWERBI_CLIENT_ID, POWERBI_CLIENT_SECRET, POWERBI_TENANT_ID, POWERBI_GROUP_ID, POWERBI_REPORT_ID or POWERBI_PUBLIC_EMBED_URL'}), 400
 
     if msal is None:
         return jsonify({'ok': False, 'error': 'msal library not installed. pip install msal'}), 500
@@ -712,4 +907,4 @@ def api_forecast_data():
         return jsonify(json.load(f))
 
 if __name__ == "__main__":
-    app.run(debug=True, use_reloader=False)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))

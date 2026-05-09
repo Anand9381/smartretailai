@@ -1,18 +1,20 @@
-from db import products_collection, orders_collection, users_collection
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 from bson import ObjectId
 
-class CosmosService:
+from db import orders_collection, products_collection, users_collection
+
+
+class MongoService:
     def get_products(self, query: str = "", limit: int = 10) -> List[Dict[str, Any]]:
-        """Get products from Cosmos DB, optionally filtered by query."""
-        # Simple text search on name, category or description
+        """Get products from MongoDB, optionally filtered by query."""
         if query:
             regex = {"$regex": query, "$options": "i"}
             products = list(products_collection.find({
                 "$or": [
                     {"name": regex},
                     {"category": regex},
-                    {"desc": regex}
+                    {"desc": regex},
                 ]
             }).limit(limit))
         else:
@@ -25,8 +27,6 @@ class CosmosService:
 
     def get_user_orders(self, user_id: str) -> List[Dict[str, Any]]:
         """Get orders for a specific user."""
-        # Orders in the database may store `user_id` either as a string or as an ObjectId.
-        # Query for both forms when possible for robust results.
         try:
             if user_id and ObjectId.is_valid(user_id):
                 obj = ObjectId(user_id)
@@ -39,7 +39,6 @@ class CosmosService:
 
     def get_user_info(self, user_id: str) -> Dict[str, Any]:
         """Get user information."""
-        # Accept either string id or ObjectId
         try:
             if user_id and ObjectId.is_valid(user_id):
                 return users_collection.find_one({"_id": ObjectId(user_id)})

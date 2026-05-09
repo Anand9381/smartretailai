@@ -3,30 +3,98 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-try:
-    from langchain_groq import ChatGroq
-except Exception:
-    ChatGroq = None
-
 class LLMService:
     def __init__(self):
         self.llm = None
-        if ChatGroq is not None and os.getenv("GROQ_API_KEY"):
-            self.llm = ChatGroq(
-                api_key=os.getenv("GROQ_API_KEY"),
-                model_name=os.getenv("GROQ_MODEL", "llama3-8b-8192"),
-                temperature=0.7
-            )
+        self._llm_error = None
         self.conversation_history = []
 
+    def _get_llm(self):
+        if self.llm is not None or self._llm_error:
+            return self.llm
+        if not os.getenv("GROQ_API_KEY"):
+            self._llm_error = "GROQ_API_KEY is not configured"
+            return None
+        try:
+            import httpx
+            from langchain_groq import ChatGroq
+
+            self.llm = ChatGroq(
+                api_key=os.getenv("GROQ_API_KEY"),
+                model=os.getenv("GROQ_MODEL", "llama3-8b-8192"),
+                temperature=float(os.getenv("GROQ_TEMPERATURE", "0.25")),
+                timeout=float(os.getenv("GROQ_TIMEOUT", "25")),
+                max_retries=int(os.getenv("GROQ_MAX_RETRIES", "1")),
+                http_client=httpx.Client(trust_env=False, timeout=float(os.getenv("GROQ_TIMEOUT", "25"))),
+            )
+        except Exception as exc:
+            self._llm_error = str(exc)
+            print(f"[LLMService] Groq client unavailable: {exc}")
+        return self.llm
+
     def invoke(self, prompt: str, fallback: str = "") -> str:
-        if self.llm is None:
+        llm = self._get_llm()
+        if llm is None:
             return fallback or "I can answer from the available store data, but the live LLM service is not configured."
         try:
-            return self.llm.invoke(prompt).content
+            return llm.invoke(prompt).content
         except Exception as exc:
             print(f"[LLMService] Groq unavailable, using local data fallback: {exc}")
             return fallback or "I can answer from the available store data, but the live LLM service is currently unavailable."
+
+    def _clean_grounded_output(self, response: str) -> str:
+        blocked_followups = [
+            "would you like",
+            "do you want",
+            "if you'd like",
+            "if you would like",
+            "let me know",
+            "feel free",
+        ]
+        lines = []
+        for line in response.splitlines():
+            compact = line.strip()
+            if not compact:
+                lines.append(line)
+                continue
+            normalized = compact.lower()
+            if any(phrase in normalized for phrase in blocked_followups):
+                continue
+            lines.append(line)
+        cleaned = "\n".join(lines).strip()
+        return cleaned or response.strip()
+
+    def grounded_answer(self, user_message: str, verified_facts: str, role: str, fallback: str = "") -> str:
+        """Use Groq to humanise only verified project facts."""
+        prompt = f"""You are SmartRetailAI's {role}.
+
+Your job:
+- Answer naturally and professionally.
+- Use ONLY the verified project facts below.
+- Do not add outside knowledge, live web facts, generic claims, or invented numbers.
+- Preserve product names, prices, stock, sales growth, offers, and policy rules exactly.
+- Treat listed prices as the current catalog price. Never infer an original price, final price, savings amount, or hidden offer.
+- If verified facts include product lists, keep the same product names and exact numeric values; do not rename, merge, or replace them.
+- For customer product answers, always include current catalog price and stock status when those facts are provided.
+- For customer product lists or filters, include each product's name, current catalog price, stock status, and short description when those facts are provided.
+- If an offer or discount is mentioned only inside a product description, repeat it exactly as description text and do not calculate the discounted amount.
+- If the user asks outside this domain, politely say you can only help within this SmartRetailAI area.
+- Keep the response compact: 3-6 clear lines or bullets.
+- Sound human, not like a hardcoded mapping.
+- Do not add filler such as "if you'd like" or offer extra details unless those details are in the verified facts.
+- Do not mention that you were given verified facts or context.
+
+Verified project facts:
+{verified_facts}
+
+User question:
+{user_message}
+
+Final answer:"""
+        response = self.invoke(prompt, fallback=fallback or verified_facts)
+        response = self._clean_grounded_output(response)
+        self.conversation_history.append({"user": user_message, "assistant": response})
+        return response
 
     def chat(self, user_message: str, context: str = "") -> str:
         """Generate a response using the LLM with context and conversation history."""

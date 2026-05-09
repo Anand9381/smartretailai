@@ -271,6 +271,31 @@
       margin-bottom: 0;
     }
 
+    .typing-bubble {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      min-width: 64px;
+      min-height: 34px;
+    }
+
+    .typing-bubble span {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: currentColor;
+      opacity: 0.35;
+      animation: typingPulse 1s infinite ease-in-out;
+    }
+
+    .typing-bubble span:nth-child(2) { animation-delay: 0.15s; }
+    .typing-bubble span:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes typingPulse {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+      40% { transform: translateY(-4px); opacity: 0.9; }
+    }
+
     .chat-history .message-content ul {
       margin: 0.3rem 0 0;
       padding-left: 1.3rem;
@@ -444,7 +469,7 @@
     <div class="hero-section">
       <div class="hero-badge">AI-Powered Assistant</div>
       <h1 class="hero-title">How can <em>I</em> help you today?</h1>
-      <p class="hero-subtitle">Ask me anything about products, stock, offers, trends or analytics.</p>
+      <p class="hero-subtitle">Ask me about products, prices, stock, offers, returns, shipping, warranty, or your orders.</p>
     </div>
 
     <!-- Chat Container -->
@@ -456,22 +481,10 @@
       <!-- Chat History -->
       <div class="chat-history" id="chatHistory"></div>
 
-      <!-- Quick Actions -->
-      <div class="quick-actions">
-        <div class="quick-actions-label">Quick Actions</div>
-        <div class="quick-actions-row">
-          <button class="qa-chip chat-chip" type="button"><span class="qa-icon">📈</span> Trending Products</button>
-          <button class="qa-chip chat-chip" type="button"><span class="qa-icon">📦</span> Low Stock Alerts</button>
-          <button class="qa-chip chat-chip" type="button"><span class="qa-icon">🏷️</span> Active Offers</button>
-          <button class="qa-chip chat-chip" type="button"><span class="qa-icon">🚫</span> Out of Stock</button>
-          <button class="qa-chip chat-chip" type="button"><span class="qa-icon">⭐</span> Top Performing</button>
-        </div>
-      </div>
-
       <!-- Compose -->
       <div class="compose-bar">
         <div class="compose-wrapper">
-          <input id="messageInput" class="compose-input" placeholder="Type your message here..." />
+          <input id="messageInput" class="compose-input" placeholder="Ask naturally about products, offers, shipping, returns, warranty, or orders..." />
           <button class="compose-attach" type="button" aria-label="Attach">📎</button>
           <button id="sendBtn" class="compose-send" type="button" aria-label="Send">➤</button>
         </div>

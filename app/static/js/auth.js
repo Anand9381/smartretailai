@@ -29,15 +29,16 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password, role }),
         });
-        const j = await res.json();
+        const text = await res.text();
+        const j = text ? JSON.parse(text) : {};
         if (j.ok) {
           window.location.href = j.redirect || (j.role === 'admin' ? '/admin/dashboard' : '/dashboard');
         } else {
-          alert(j.error || 'Login failed');
+          alert(j.error || `Login failed (${res.status})`);
         }
       } catch (err) {
         console.error(err);
-        alert('Network error');
+        alert(err.message || 'Network error');
       }
     });
   }
@@ -62,15 +63,16 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ full_name: name, email, password, role, admin_secret }),
         });
-        const j = await res.json();
+        const text = await res.text();
+        const j = text ? JSON.parse(text) : {};
         if (j.ok) {
-          window.location.href = '/login';
+          window.location.href = j.redirect || '/login';
         } else {
-          alert(j.error || 'Signup failed');
+          alert(j.error || `Signup failed (${res.status})`);
         }
       } catch (err) {
         console.error(err);
-        alert('Network error');
+        alert(err.message || 'Network error');
       }
     });
   }

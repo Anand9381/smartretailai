@@ -1,25 +1,81 @@
 document.addEventListener('DOMContentLoaded', () => {
+  Chart.defaults.color = 'rgba(255,255,255,0.72)';
+  Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+
+  const chartDataEl = document.getElementById('dashboardChartData');
+  const chartData = chartDataEl ? JSON.parse(chartDataEl.textContent || '{}') : {};
+
   const salesCtx = document.getElementById('salesChart');
-  if (salesCtx) {
-    fetch('/api/sales_series')
-      .then((r) => r.json())
-      .then((j) => {
-        if (!j.ok) return;
-        new Chart(salesCtx, {
-          type: 'line',
-          data: { labels: j.dates.slice(-30), datasets: [{ label: 'Sales', data: j.sales.slice(-30), borderColor: '#ff7a2a', backgroundColor: 'rgba(255,122,42,0.15)', tension: 0.35, fill: true }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } },
-        });
-      });
+  if (salesCtx && chartData.salesLabels?.length) {
+    new Chart(salesCtx, {
+      type: 'bar',
+      data: {
+        labels: chartData.salesLabels,
+        datasets: [
+          {
+            label: 'Last Month Sales',
+            data: chartData.lastMonthSales,
+            backgroundColor: 'rgba(148, 163, 184, 0.45)',
+            borderColor: 'rgba(148, 163, 184, 0.9)',
+            borderWidth: 1,
+            borderRadius: 8,
+          },
+          {
+            label: 'Current Monthly Sales',
+            data: chartData.monthlySales,
+            backgroundColor: 'rgba(52, 211, 153, 0.72)',
+            borderColor: '#34d399',
+            borderWidth: 1,
+            borderRadius: 8,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } },
+          tooltip: { backgroundColor: '#10142f', borderColor: 'rgba(255,255,255,0.16)', borderWidth: 1 },
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { maxRotation: 35, minRotation: 0 },
+          },
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Units sold' },
+            grid: { color: 'rgba(255,255,255,0.06)' },
+          },
+        },
+      },
+    });
   }
 
-  const categoryCtx = document.getElementById('categoryChart');
-  if (categoryCtx) {
-    fetch('/api/category_share')
-      .then((r) => r.json())
-      .then((j) => {
-        if (!j.ok) return;
-        new Chart(categoryCtx, { type: 'pie', data: { labels: j.labels, datasets: [{ data: j.values, backgroundColor: ['#ff7a2a', '#ef4444', '#f59e0b', '#a855f7'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false } });
-      });
+  const stockCtx = document.getElementById('categoryChart');
+  if (stockCtx && chartData.stockStatusLabels?.length) {
+    new Chart(stockCtx, {
+      type: 'doughnut',
+      data: {
+        labels: chartData.stockStatusLabels,
+        datasets: [{
+          data: chartData.stockStatusValues,
+          backgroundColor: ['#34d399', '#f59e0b', '#ef4444', '#64748b'],
+          borderColor: 'rgba(10,14,39,0.95)',
+          borderWidth: 4,
+          hoverOffset: 12,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '58%',
+        plugins: {
+          legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } },
+          tooltip: { backgroundColor: '#10142f', borderColor: 'rgba(255,255,255,0.16)', borderWidth: 1 },
+        },
+      },
+    });
   }
 });

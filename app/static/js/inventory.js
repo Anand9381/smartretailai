@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
     createForm.elements.badge.value = 'New';
     createForm.elements.stock.value = '0';
     await loadProducts();
-    showMessage('Product saved to Cosmos DB.');
+    showMessage('Product saved to MongoDB.');
   });
 
   loadProducts();

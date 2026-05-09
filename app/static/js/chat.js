@@ -7,14 +7,34 @@ function setChatStatus(message) {
   }
 }
 
-function wirePromptButtons(selector) {
-  document.querySelectorAll(selector).forEach((button) => {
-    button.addEventListener('click', () => {
-      const input = document.getElementById('messageInput');
-      if (input) input.value = button.textContent.trim();
-      input?.focus();
-    });
-  });
+function showTypingIndicator() {
+  const history = document.getElementById('chatHistory');
+  if (!history || document.getElementById('typingIndicator')) return;
+
+  const msg = document.createElement('div');
+  msg.className = 'message assistant-message chat-message assistant typing-message';
+  msg.id = 'typingIndicator';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'message-avatar';
+  avatar.textContent = 'AI';
+  msg.appendChild(avatar);
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'message-wrapper';
+
+  const content = document.createElement('div');
+  content.className = 'message-content chat-bubble typing-bubble';
+  content.innerHTML = '<span></span><span></span><span></span>';
+
+  wrapper.appendChild(content);
+  msg.appendChild(wrapper);
+  history.appendChild(msg);
+  history.scrollTop = history.scrollHeight;
+}
+
+function hideTypingIndicator() {
+  document.getElementById('typingIndicator')?.remove();
 }
 
 async function sendMessage() {
@@ -34,7 +54,8 @@ async function sendMessage() {
   appendMessage('user', message);
 
   try {
-    setChatStatus('Thinking...');
+    setChatStatus('...');
+    showTypingIndicator();
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -44,10 +65,12 @@ async function sendMessage() {
     if (!response.ok) {
       throw new Error(payload.error || payload.response || 'Chat request failed.');
     }
+    hideTypingIndicator();
     setChatStatus('');
     input.value = '';
     appendMessage('assistant', payload.response || 'No response');
   } catch (error) {
+    hideTypingIndicator();
     setChatStatus('Error: ' + (error.message || 'Unable to reach the assistant.'));
   }
 }
@@ -127,15 +150,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  wirePromptButtons('.chat-chip');
-  wirePromptButtons('.admin-chip');
-
   if (document.getElementById('chatHistory')?.children.length === 0) {
     const shell = document.querySelector('[data-chat-role]');
     const role = shell?.dataset.chatRole || 'user';
     const welcomeMessages = {
-      admin: 'Hello Admin! I\'m your Admin Assistant. Ask me about stock levels, trending products, sales forecasts, restocking recommendations, or business insights.',
-      user: 'Hello! I can help with product recommendations, order status, shipping, returns, and warranty questions.',
+      admin: 'Hello Admin. Ask in your own words about stock, trends, demand, offers, restocking, or product performance.',
+      user: 'Hello! Ask in your own words about products, prices, stock, offers, shipping, returns, warranty, or your orders.',
     };
     appendMessage('assistant', welcomeMessages[role] || welcomeMessages.user);
   }
