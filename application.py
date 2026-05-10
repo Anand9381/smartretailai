@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import json
 import csv
+import re
 from functools import wraps
 from bson import ObjectId
 from datetime import datetime
@@ -30,6 +31,57 @@ app.secret_key = os.environ.get('FLASK_SECRET', 'dev-secret-change-me')
 _users = users_collection
 _products = products_collection
 _sales = sales_collection
+
+DEFAULT_PRODUCT_IMAGE = "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700"
+
+
+def _slugify(value: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", str(value or "").strip().lower()).strip("-")
+    return slug or f"product-{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')}"
+
+
+def _unique_product_slug(base_slug: str, current_slug: str | None = None) -> str:
+    slug = _slugify(base_slug)
+    candidate = slug
+    suffix = 2
+    query = {"slug": candidate}
+    if current_slug:
+        query["slug"] = {"$ne": current_slug}
+    while _products.find_one(query, {"_id": 1}):
+        candidate = f"{slug}-{suffix}"
+        suffix += 1
+        query = {"slug": candidate}
+        if current_slug:
+            query["slug"] = {"$ne": current_slug}
+    return candidate
+
+
+def _catalog_product(product: dict) -> dict:
+    price = product.get("price", 0)
+    stock = product.get("stock", 0)
+    try:
+        price = float(price or 0)
+    except Exception:
+        price = 0.0
+    try:
+        stock = int(stock or 0)
+    except Exception:
+        stock = 0
+    name = str(product.get("name") or "Unnamed product").strip()
+    return {
+        "slug": str(product.get("slug") or _slugify(name)),
+        "name": name,
+        "category": str(product.get("category") or "General").strip(),
+        "price": price,
+        "image": str(product.get("image") or DEFAULT_PRODUCT_IMAGE).strip(),
+        "desc": str(product.get("desc") or "Catalog product added from admin inventory.").strip(),
+        "stock": stock,
+        "badge": str(product.get("badge") or "New").strip(),
+    }
+
+
+def _catalog_products():
+    return [_catalog_product(product) for product in _products.find({}, {"_id": 0})]
 
 
 def _seed_db_if_empty():
@@ -211,7 +263,7 @@ def logout():
 @app.route("/products")
 def products():
     # fetch products from DB
-    prods = list(_products.find({}, {'_id': 0}))
+    prods = _catalog_products()
     return render_template("products.html", products=prods)
 
 
@@ -346,7 +398,7 @@ def api_anomalies():
 
 @app.route('/api/products')
 def api_products():
-    prods = list(_products.find({}, {'_id': 0}))
+    prods = _catalog_products()
     return jsonify({'ok': True, 'products': prods})
 
 
@@ -532,7 +584,7 @@ def api_category_share():
 @app.route('/api/inventory', methods=['GET'])
 @admin_required
 def api_inventory_list():
-    prods = list(_products.find({}, {'_id': 0}))
+    prods = _catalog_products()
     return jsonify({'ok': True, 'products': prods})
 
 
@@ -540,12 +592,13 @@ def api_inventory_list():
 @admin_required
 def api_inventory_create():
     data = request.get_json() or {}
-    required = ['slug', 'name', 'price']
-    if not all(k in data for k in required):
-        return jsonify({'ok': False, 'error': 'slug,name,price required'}), 400
-    data.setdefault('stock', 0)
-    _products.insert_one(data)
-    return jsonify({'ok': True})
+    if not str(data.get('name') or '').strip() or data.get('price') in (None, ''):
+        return jsonify({'ok': False, 'error': 'name and price required'}), 400
+
+    product = _catalog_product(data)
+    product['slug'] = _unique_product_slug(data.get('slug') or product['name'])
+    _products.insert_one(product)
+    return jsonify({'ok': True, 'product': product})
 
 
 @app.route('/api/inventory/<slug>', methods=['PUT', 'PATCH'])
@@ -558,6 +611,18 @@ def api_inventory_update(slug):
             update[k] = data[k]
     if not update:
         return jsonify({'ok': False, 'error': 'no fields to update'}), 400
+    if 'name' in update:
+        update['name'] = str(update['name'] or '').strip() or 'Unnamed product'
+    if 'price' in update:
+        update['price'] = float(update['price'] or 0)
+    if 'stock' in update:
+        update['stock'] = int(update['stock'] or 0)
+    if 'category' in update:
+        update['category'] = str(update['category'] or 'General').strip() or 'General'
+    if 'image' in update:
+        update['image'] = str(update['image'] or DEFAULT_PRODUCT_IMAGE).strip() or DEFAULT_PRODUCT_IMAGE
+    if 'desc' in update:
+        update['desc'] = str(update['desc'] or 'Catalog product added from admin inventory.').strip()
     _products.update_one({'slug': slug}, {'$set': update})
     return jsonify({'ok': True})
 
@@ -566,6 +631,7 @@ def api_inventory_update(slug):
 @admin_required
 def api_inventory_delete(slug):
     _products.delete_one({'slug': slug})
+    carts_collection.update_many({}, {'$pull': {'items': {'slug': slug}}})
     return jsonify({'ok': True})
 
 

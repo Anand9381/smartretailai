@@ -304,6 +304,17 @@
   margin-bottom: 0.75rem;
 }
 
+.product-stock-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  color: var(--text-gray);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.85rem;
+}
+
 .product-rating {
   display: flex;
   align-items: center;

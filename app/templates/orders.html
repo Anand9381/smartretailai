@@ -23,14 +23,9 @@
     <div class="retail-nav-links">
       <a href="{{ url_for('public_landing') }}">Home</a>
       <a href="{{ url_for('products') }}">Products</a>
-      <a href="{{ url_for('dashboard') }}">Categories</a>
-      <a href="{{ url_for('dashboard') }}">Deals</a>
-      <a href="{{ url_for('orders') }}" class="active">Analytics</a>
+      <a href="{{ url_for('orders') }}" class="active">Orders</a>
     </div>
     <div class="retail-nav-actions">
-      <a href="{{ url_for('products') }}" class="retail-icon-link" aria-label="Search">
-        <svg viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m1.85-5.15a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>
-      </a>
       <a href="{{ url_for('cart_page') }}" class="retail-icon-link retail-cart-link" aria-label="Cart">
         <svg viewBox="0 0 24 24"><path d="M2 3h2l2.2 10.2a1 1 0 0 0 1 .8h9.9a1 1 0 0 0 1-.7L21 6H6"/><circle cx="9" cy="19" r="1.6"/><circle cx="18" cy="19" r="1.6"/></svg>
         <span id="navCartCount" class="retail-badge">0</span>
@@ -51,10 +46,6 @@
         <a href="{{ url_for('dashboard') }}">Profile</a>
         <a href="{{ url_for('orders') }}" class="active">Orders</a>
         <a href="{{ url_for('cart_page') }}">Cart <span id="sidebarCartCount" class="sidebar-pill">0</span></a>
-        <a href="{{ url_for('products') }}">Wishlist</a>
-        <a href="{{ url_for('dashboard') }}">Addresses</a>
-        <a href="{{ url_for('dashboard') }}">Payment Methods</a>
-        <a href="{{ url_for('dashboard') }}">Settings</a>
       </div>
       <a href="{{ url_for('logout') }}" class="sidebar-logout">Logout</a>
     </aside>

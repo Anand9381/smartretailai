@@ -2,15 +2,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const tbody = document.querySelector('.orders-table tbody');
   const createForm = document.getElementById('inventoryCreateForm');
 
-  function showMessage(message) {
-    window.alert(message);
+  function showMessage(title, message, type = 'success') {
+    let toast = document.querySelector('.admin-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.className = 'admin-toast hide';
+      document.body.appendChild(toast);
+    }
+
+    toast.className = `admin-toast ${type}`;
+    toast.innerHTML = `<strong>${title}</strong><span>${message}</span>`;
+    clearTimeout(window.__adminToastTimer);
+    window.__adminToastTimer = setTimeout(() => toast.classList.add('hide'), 3000);
+  }
+
+  function clearCreateForm() {
+    if (!createForm) return;
+    createForm.reset();
+    [...createForm.elements].forEach((field) => {
+      if ('value' in field) {
+        field.value = '';
+      }
+    });
   }
 
   async function loadProducts() {
     const res = await fetch('/api/inventory');
     const data = await res.json();
     if (!data.ok) {
-      showMessage(data.error || 'Failed to load inventory.');
+      showMessage('Inventory error', data.error || 'Failed to load inventory.', 'error');
       return;
     }
 
@@ -47,10 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const data = await res.json();
         if (!data.ok) {
-          showMessage(data.error || 'Save failed.');
+          showMessage('Save failed', data.error || 'Unable to update this product.', 'error');
           return;
         }
         await loadProducts();
+        showMessage('Product updated', 'Inventory changes are now live in the user catalog.');
       });
     });
 
@@ -60,10 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch(`/api/inventory/${button.dataset.slug}`, { method: 'DELETE' });
         const data = await res.json();
         if (!data.ok) {
-          showMessage(data.error || 'Delete failed.');
+          showMessage('Delete failed', data.error || 'Unable to delete this product.', 'error');
           return;
         }
         await loadProducts();
+        showMessage('Product deleted', 'The product was removed from admin inventory and user products.');
       });
     });
   }
@@ -82,15 +104,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const data = await res.json();
     if (!data.ok) {
-      showMessage(data.error || 'Create failed.');
+      showMessage('Create failed', data.error || 'Please check the product details.', 'error');
       return;
     }
 
-    createForm.reset();
-    createForm.elements.badge.value = 'New';
-    createForm.elements.stock.value = '0';
+    clearCreateForm();
     await loadProducts();
-    showMessage('Product saved to MongoDB.');
+    showMessage('Product added', 'The product is saved and visible in the user product catalog.');
   });
 
   loadProducts();

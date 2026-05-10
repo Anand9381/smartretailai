@@ -25,14 +25,9 @@
     <div class="retail-nav-links">
       <a href="{{ url_for('public_landing') }}">Home</a>
       <a href="{{ url_for('products') }}" class="active">Products</a>
-      <a href="{{ url_for('dashboard') }}">Categories</a>
-      <a href="{{ url_for('dashboard') }}">Deals</a>
       <a href="{{ url_for('orders') }}">Orders</a>
     </div>
     <div class="retail-nav-actions">
-      <a href="{{ url_for('products') }}" class="retail-icon-link" aria-label="Search">
-        <svg viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m1.85-5.15a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>
-      </a>
       <button type="button" id="cartIcon" class="retail-icon-link retail-cart-link" aria-label="Open cart">
         <svg viewBox="0 0 24 24"><path d="M2 3h2l2.2 10.2a1 1 0 0 0 1 .8h9.9a1 1 0 0 0 1-.7L21 6H6"/><circle cx="9" cy="19" r="1.6"/><circle cx="18" cy="19" r="1.6"/></svg>
         <span id="navCartCount" class="retail-badge">0</span>
@@ -59,7 +54,7 @@
       </div>
       <div class="filter-section">
         <label class="filter-label">Price Range</label>
-        <div class="price-filter"><input class="price-input" id="minPrice" value="0"><span>-</span><input class="price-input" id="maxPrice" value="999"></div>
+        <div class="price-filter"><input class="price-input" id="minPrice" value="0"><span>-</span><input class="price-input" id="maxPrice" placeholder="No limit"></div>
       </div>
       <div class="filter-section">
         <label class="checkbox-item"><input type="checkbox" id="inStockOnly"> In stock only</label>
@@ -87,12 +82,20 @@
               data-image="{{ p.image }}"
               data-desc="{{ p.desc }}">
               <div class="product-image"><img src="{{ p.image }}" alt="{{ p.name }}"><div class="product-badge">{{ p.badge or '' }}</div></div>
-              <div class="product-info"><div class="product-category">{{ p.category }}</div><h3 class="product-name">{{ p.name }}</h3><p class="product-desc">{{ p.desc }}</p><div class="product-footer"><div class="product-price"><span class="current-price">${{ '%.2f'|format(p.price) }}</span></div></div>
-              <div class="product-actions">
-                <a href="{{ url_for('product_detail', product_id=p.slug) }}" class="btn btn-secondary btn-sm">View</a>
-                <button type="button" class="btn btn-primary btn-sm add-to-cart-btn">Add to Cart</button>
-              </div></div>
-              <div class="product-stock"><span class="badge {{ 'badge-success' if p.stock>10 else 'badge-warning' }}">{{ 'In Stock' if p.stock>0 else 'Out' }}</span></div>
+              <div class="product-info">
+                <div class="product-category">{{ p.category }}</div>
+                <h3 class="product-name">{{ p.name }}</h3>
+                <p class="product-desc">{{ p.desc }}</p>
+                <div class="product-stock-line">
+                  <span class="badge {{ 'badge-success' if p.stock>10 else 'badge-warning' }}">{{ 'In Stock' if p.stock>0 else 'Out of Stock' }}</span>
+                  <span>Stock: {{ p.stock }} units</span>
+                </div>
+                <div class="product-footer"><div class="product-price"><span class="current-price">${{ '%.2f'|format(p.price) }}</span></div></div>
+                <div class="product-actions">
+                  <a href="{{ url_for('product_detail', product_id=p.slug) }}" class="btn btn-secondary btn-sm">View</a>
+                  <button type="button" class="btn btn-primary btn-sm add-to-cart-btn">Add to Cart</button>
+                </div>
+              </div>
             </article>
           {% endfor %}
         {% else %}
@@ -129,6 +132,6 @@
   </section>
 
   <script>window.__USER_ID__ = "{{ session.get('user_id') or '' }}";</script>
-  <script src="{{ url_for('static', filename='js/products.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/products.js') }}?v=2"></script>
 </body>
 </html>

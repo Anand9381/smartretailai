@@ -602,7 +602,7 @@ function bindStaticEvents() {
   resetBtn?.addEventListener('click', () => {
     if (searchInput) searchInput.value = '';
     if (minPrice) minPrice.value = '0';
-    if (maxPrice) maxPrice.value = '999';
+    if (maxPrice) maxPrice.value = '';
     if (inStockOnly) inStockOnly.checked = false;
     document.querySelectorAll('.category-filter').forEach((el) => { el.checked = true; });
     applyFilters();

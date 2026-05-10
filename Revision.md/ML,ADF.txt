@@ -1,0 +1,274 @@
+```text
+MACHINE LEARNING PART IN MY PROJECT
+
+1. Project ML Objective
+The main goal of the machine learning part in my project was retail demand forecasting.
+
+The system predicts future product sales demand using:
+- historical sales
+- customer engagement
+- product popularity
+- retail analytics data
+
+This helps businesses:
+- manage inventory
+- reduce overstock
+- avoid stock shortages
+- improve sales planning
+
+
+2. Complete ML Flow
+
+Retail Dataset
+↓
+Azure Data Factory
+↓
+Azure Data Lake Storage
+↓
+PySpark Processing in Databricks
+↓
+Feature Engineering
+↓
+Random Forest Machine Learning Model
+↓
+Future Sales Predictions
+↓
+Power BI + Flask Dashboard
+
+
+3. Dataset Used
+
+The project used a retail analytics dataset containing:
+- monthly sales
+- customer views
+- cart additions
+- engagement score
+- trending score
+- ratings
+- stock information
+
+Important columns:
+- monthlySales
+- monthlyViews
+- cartAdds
+- trendingScore
+- engagementScore
+
+These features help understand customer behavior and product demand.
+
+
+4. Azure Data Factory (ADF)
+
+ADF stands for Azure Data Factory.
+
+It is a cloud data integration and ETL service.
+
+I used ADF to:
+- ingest retail datasets
+- automate data movement
+- create ETL pipelines
+- move data into Azure Data Lake
+
+ADF copied data from:
+raw layer → staged layer
+
+This automated the data ingestion workflow.
+
+
+5. Azure Data Lake Storage
+
+Azure Data Lake Storage was used as centralized cloud storage.
+
+I used 3 layers:
+- raw
+- staged
+- curated
+
+raw:
+stores original dataset
+
+staged:
+stores ADF processed data
+
+curated:
+stores processed ML-ready analytical data
+
+This follows enterprise data engineering architecture.
+
+
+6. PySpark Processing
+
+PySpark is the Python API for Apache Spark.
+
+It is used for distributed big data processing.
+
+I used PySpark inside Azure Databricks for:
+- loading datasets
+- data cleaning
+- transformations
+- analytics processing
+- feature engineering
+
+PySpark helps process large datasets efficiently in distributed cloud environments.
+
+
+7. Feature Engineering
+
+Feature engineering means creating meaningful ML input features from raw data.
+
+I used features like:
+- monthlyViews
+- cartAdds
+- trendingScore
+- monthlySales
+- engagementScore
+
+These features help the model learn:
+- customer interest
+- product popularity
+- buying behavior
+- demand trends
+
+
+8. Supervised Machine Learning
+
+The project used supervised machine learning.
+
+Input features:
+- monthlyViews
+- cartAdds
+- trendingScore
+- monthlySales
+- engagementScore
+
+Target variable:
+futureSales
+
+I created:
+futureSales = monthlySales * 1.15
+
+This simulated future retail demand growth.
+
+
+9. Random Forest Regression
+
+I used Random Forest Regression for forecasting.
+
+Random Forest is an ensemble machine learning algorithm.
+
+It creates multiple decision trees and combines their predictions for better accuracy.
+
+Why I used Random Forest:
+- handles nonlinear retail patterns
+- good for business datasets
+- reduces overfitting
+- works well with multiple features
+- provides stable predictions
+
+Why not Linear Regression:
+Linear Regression assumes straight-line relationships.
+
+Retail demand depends on:
+- trends
+- engagement
+- popularity
+- customer behavior
+
+which are nonlinear.
+
+So Random Forest performed better for forecasting.
+
+
+10. Train-Test Split
+
+The dataset was divided into:
+- training data
+- testing data
+
+80% → training
+20% → testing
+
+This helps evaluate the model on unseen data and avoids overfitting.
+
+
+11. Model Training
+
+The model learned relationships between:
+- historical sales
+- customer engagement
+- product trends
+- popularity metrics
+
+and future product demand.
+
+The model was trained using:
+RandomForestRegressor()
+
+
+12. Predictions
+
+After training, the model generated:
+predictedFutureSales
+
+Example:
+Current Sales → 125
+Predicted Future Sales → 132
+
+This helps forecast future retail demand.
+
+
+13. Model Evaluation
+
+I used:
+Mean Absolute Error (MAE)
+
+MAE measures:
+average prediction error.
+
+My model MAE:
+110.73
+
+Meaning:
+the model predictions differed from actual values by about 110 units on average.
+
+
+14. Saving Predictions
+
+The forecasting outputs were saved into:
+Azure Data Lake curated layer
+
+using:
+Parquet format
+
+Parquet is optimized for:
+- analytics
+- cloud processing
+- faster querying
+
+
+15. Power BI and Flask Dashboard
+
+The ML predictions were visualized using:
+- Power BI
+- Flask Admin Dashboard
+
+Visualizations included:
+- demand forecasting charts
+- scatter plots
+- growth analytics
+- inventory insights
+- AI analytics dashboards
+
+
+16. Final Project ML Explanation
+
+The project implemented an end-to-end machine learning forecasting pipeline for retail demand analytics.
+
+Retail datasets were ingested using Azure Data Factory into Azure Data Lake Storage.
+
+Azure Databricks with PySpark was used for distributed data processing and feature engineering.
+
+A Random Forest Regression model was trained using customer engagement and sales analytics features to predict future product demand.
+
+The predictions were evaluated using MAE and visualized through Power BI and Flask dashboards for business intelligence analytics.
+```
